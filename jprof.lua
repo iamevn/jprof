@@ -58,45 +58,45 @@ local function msgpackListIntoFile(n, file)
         error("List too big")
     end
 
-	if isThreaded then
-		local DONE = true
-		for _, channel in ipairs(eventChannels) do
-			channel:supply(DONE)
-		end
+    if isThreaded then
+        local DONE = true
+        for _, channel in ipairs(eventChannels) do
+            channel:supply(DONE)
+        end
 
-		local channelIdx = 1
-		-- iterate for each chunk, rounded up to account for the last
-		-- potentially incomplete chunk
-		local numChunks = math.ceil(n/chunkSize)
-		for _ = 1, numChunks do
-			local chunkStr = eventChannels[channelIdx]:demand()
-			file:write(chunkStr)
-			channelIdx = channelIdx % numThreads + 1
-		end
-	else
-		for _, event in ipairs(profData) do
-			file:write(msgpack.pack(event))
-		end
-	end
+        local channelIdx = 1
+        -- iterate for each chunk, rounded up to account for the last
+        -- potentially incomplete chunk
+        local numChunks = math.ceil(n/chunkSize)
+        for _ = 1, numChunks do
+            local chunkStr = eventChannels[channelIdx]:demand()
+            file:write(chunkStr)
+            channelIdx = channelIdx % numThreads + 1
+        end
+    else
+        for _, event in ipairs(profData) do
+            file:write(msgpack.pack(event))
+        end
+    end
 end
 
 local profDataNumEventsInChunk = 0
 local currentChannelIndex = 1
 local function addEvent(name, memCount, annot)
-	local time = love.timer.getTime()
-	local event = {name, time, memCount, annot}
+    local time = love.timer.getTime()
+    local event = {name, time, memCount, annot}
     if profData then
-		profDataNumEvents = profDataNumEvents + 1
-		if isThreaded then
-			eventChannels[currentChannelIndex]:push(event)
-			profDataNumEventsInChunk = profDataNumEventsInChunk + 1
-			if profDataNumEventsInChunk == chunkSize then
-				currentChannelIndex = currentChannelIndex % numThreads + 1
-				profDataNumEventsInChunk = 0
-			end
-		else
-			profData[profDataNumEvents] = event
-		end
+        profDataNumEvents = profDataNumEvents + 1
+        if isThreaded then
+            eventChannels[currentChannelIndex]:push(event)
+            profDataNumEventsInChunk = profDataNumEventsInChunk + 1
+            if profDataNumEventsInChunk == chunkSize then
+                currentChannelIndex = currentChannelIndex % numThreads + 1
+                profDataNumEventsInChunk = 0
+            end
+        else
+            profData[profDataNumEvents] = event
+        end
     end
     if netBuffer then
         table.insert(netBuffer, event)
@@ -121,10 +121,10 @@ if PROF_CAPTURE then
         -- if the full profiling data is not saved to profData, then only netBuffer will increase the
         -- memory used by jprof and all of it will be freed for garbage collection at some point, so that
         -- we should probably not try to keep track of it at all
-		--
-		-- Ditto for threaded write support: All event storage is squirrelled
-		-- away into worker threads, so we don't actually increase the memory
-		-- toll on the "main" thread VM.
+        --
+        -- Ditto for threaded write support: All event storage is squirrelled
+        -- away into worker threads, so we don't actually increase the memory
+        -- toll on the "main" thread VM.
         if profData and not isThreaded then
             profMem = profMem + (collectgarbage("count") - memCount)
         end
@@ -158,17 +158,17 @@ if PROF_CAPTURE then
     function profiler.enableThreadedWrite(_numThreads, _chunkSize)
         assert(profData, "(jprof) profiling disabled (did you call prof.connect()?))")
         assert(profDataNumEvents == 0, "(jprof) prof.enableThreadedWrite() should be called before creating profile events")
-		isThreaded = true
-		-- I have no evidence that this is the best number of threads, just that it seems ok on my machine
-		numThreads = _numThreads or love.system.getProcessorCount() * 2
-		-- Ditto here, chunk size does not seem to have a huge effect on performance so long as it's not like, 1
-		chunkSize = _chunkSize or 512
-		for i=1, numThreads do
-			local channel = love.thread.newChannel()
-			table.insert(eventChannels, channel)
-			love.thread.newThread("serializeWorkerThread.lua"):start(channel, chunkSize)
-		end
-	end
+        isThreaded = true
+        -- I have no evidence that this is the best number of threads, just that it seems ok on my machine
+        numThreads = _numThreads or love.system.getProcessorCount() * 2
+        -- Ditto here, chunk size does not seem to have a huge effect on performance so long as it's not like, 1
+        chunkSize = _chunkSize or 512
+        for i=1, numThreads do
+            local channel = love.thread.newChannel()
+            table.insert(eventChannels, channel)
+            love.thread.newThread("serializeWorkerThread.lua"):start(channel, chunkSize)
+        end
+    end
 
     function profiler.write(filename)
         assert(#zoneStack == 0, "(jprof) Zone stack is not empty")
@@ -177,13 +177,13 @@ if PROF_CAPTURE then
             print("(jprof) No profiling data saved (probably because you called prof.connect())")
         else
             print(("(jprof) Saving %d profiled events..."):format(profDataNumEvents))
-			local serializeTime = love.timer.getTime()
+            local serializeTime = love.timer.getTime()
             local file, msg = love.filesystem.newFile(filename, "w")
             assert(file, msg)
-			file:setBuffer('full')
+            file:setBuffer('full')
             msgpackListIntoFile(profDataNumEvents, file)
             file:close()
-			serializeTime = (love.timer.getTime() - serializeTime)
+            serializeTime = (love.timer.getTime() - serializeTime)
             print(("(jprof) Saved profiling data to '%s' (%f seconds)"):format(filename, serializeTime))
         end
     end
