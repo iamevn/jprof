@@ -159,6 +159,7 @@ if PROF_CAPTURE then
         assert(profData, "(jprof) profiling disabled (did you call prof.connect()?))")
         assert(profDataNumEvents == 0, "(jprof) prof.enableThreadedWrite() should be called before creating profile events")
         isThreaded = true
+        local threadFile = _prefix:gsub("%.", "/") .. "serializeWorkerThread.lua"
         -- I have no evidence that this is the best number of threads, just that it seems ok on my machine
         numThreads = _numThreads or love.system.getProcessorCount() * 2
         -- Ditto here, chunk size does not seem to have a huge effect on performance so long as it's not like, 1
@@ -166,7 +167,7 @@ if PROF_CAPTURE then
         for i=1, numThreads do
             local channel = love.thread.newChannel()
             table.insert(eventChannels, channel)
-            love.thread.newThread("serializeWorkerThread.lua"):start(channel, chunkSize)
+            love.thread.newThread(threadFile):start(_prefix, channel, chunkSize)
         end
     end
 

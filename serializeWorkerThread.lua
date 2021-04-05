@@ -1,7 +1,7 @@
-local eventChannel, chunkSize = ...
+local _prefix, eventChannel, chunkSize = ...
 
 love.filesystem = require 'love.filesystem'
-local msgpack = require("MessagePack")
+local msgpack = require(_prefix .. "MessagePack")
 msgpack.set_number("double")
 
 local eventList = {}
