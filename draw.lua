@@ -326,16 +326,16 @@ function love.draw()
     end
 
     if #frames > 1 then
-        if draw.graphView == "time" or draw.graphView == "both" then
-            lg.setLineWidth(1)
-            lg.setColor(const.timeGraphColor)
-            lg.line(graphs.time)
-        end
-
         if draw.graphView == "memory" or draw.graphView == "both" then
             lg.setLineWidth(2)
             lg.setColor(const.memGraphColor)
             lg.line(graphs.mem)
+        end
+
+        if draw.graphView == "time" or draw.graphView == "both" then
+            lg.setLineWidth(1)
+            lg.setColor(const.timeGraphColor)
+            lg.line(graphs.time)
         end
     end
 
